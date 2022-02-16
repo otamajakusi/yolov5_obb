@@ -30,6 +30,16 @@ python path/to/yolov5/split_data.py --datapath <annotation unzip dir> --outpath 
 python train.py --data data/analog-meter.yaml --cfg models/yolov5m.yaml --weight runs/train/exp9/weights/best.pt --batch-size 4 --device 0 --epochs 10000
 ```
 
+### tensor board
+
+```
+tensorboard --logdir runs/train
+```
+
+```
+http://localhost:6006/
+```
+
 ## predic
 
 ```
