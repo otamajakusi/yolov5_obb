@@ -39,32 +39,27 @@ def convert_bndbox(size, xmlbox, cls_id):
     return f'{cls_id} {" ".join([str(a) for a in bb])}\n'
 
 
-def convert_robndbox(size, xmlbox, cls_id):
-    b = (
+def convert_robndbox(size, xmlbox, name):
+    cx, cy, w, h = (
         float(xmlbox.find("cx").text),
         float(xmlbox.find("cy").text),
         float(xmlbox.find("w").text),
         float(xmlbox.find("h").text),
     )
-    theta = float(xmlbox.find("angle").text)
-    b1, b2, b3, b4 = b
-    if b3 < b4:
-        b = (b1, b2, b4, b3)
-        theta = int(((theta * 180 / math.pi) + 90) % 180)
-    else:
-        theta = int(theta * 180 / math.pi)
+    angle = float(xmlbox.find("angle").text)
 
-    def convert(size, box):
-        dw = 1.0 / (size[0])
-        dh = 1.0 / (size[1])
-        x = box[0] * dw
-        y = box[1] * dh
-        w = box[2] * dw
-        h = box[3] * dh
-        return x, y, w, h
+    x1 = cx + (w / 2) * math.cos(angle) - (h / 2) * math.sin(angle)
+    y1 = cy + (w / 2) * math.sin(angle) + (h / 2) * math.cos(angle)
+    x2 = cx - (w / 2) * math.cos(angle) - (h / 2) * math.sin(angle)
+    y2 = cy - (w / 2) * math.sin(angle) + (h / 2) * math.cos(angle)
+    x3 = cx - (w / 2) * math.cos(angle) + (h / 2) * math.sin(angle)
+    y3 = cy - (w / 2) * math.sin(angle) - (h / 2) * math.cos(angle)
+    x4 = cx + (w / 2) * math.cos(angle) + (h / 2) * math.sin(angle)
+    y4 = cy + (w / 2) * math.sin(angle) - (h / 2) * math.cos(angle)
 
-    bb = convert(size, b)
-    return f'{cls_id} {" ".join([str(a) for a in bb])} {theta}\n'
+    # https://github.com/otamajakusi/yolov5_obb/blob/master/docs/GetStart.md
+
+    return f"{x1} {y1} {x2} {y2} {x3} {y3} {x4} {y4} {name} 0\n"
 
 
 def convert_annotation(xml, classes):
@@ -84,7 +79,7 @@ def convert_annotation(xml, classes):
         while True:
             xmlbox = obj.find("robndbox")
             if xmlbox:
-                yolo += convert_robndbox((w, h), xmlbox, cls_id)
+                yolo += convert_robndbox((w, h), xmlbox, cls)
                 break
 
             xmlbox = obj.find("bndbox")
