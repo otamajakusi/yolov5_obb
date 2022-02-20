@@ -124,6 +124,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
 
+        results = []
         # Process predictions
         for i, det in enumerate(pred):  # per image
             pred_poly = rbox2poly(det[:, :5]) # (n, [x1 y1 x2 y2 x3 y3 x4 y4])
@@ -154,6 +155,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
                 # Write results
                 for *poly, conf, cls in reversed(det):
+                    box = {
+                        "box": [(float(poly[i*2]), float(poly[i*2+1])) for i in range(len(poly) // 2)],
+                        "class_id": int(cls),
+                    }
+                    results.append(box)
                     if save_txt:  # Write to file
                         # xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                         poly = poly.tolist()
@@ -206,6 +212,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}{s}")
     if update:
         strip_optimizer(weights)  # update model (to fix SourceChangeWarning)
+
+    return results
 
 
 def parse_opt():
